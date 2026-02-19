@@ -22,38 +22,55 @@ struct ContentView: View {
                     Text(wish.title)
                         .font(.title.weight(.light))
                         .padding(.vertical, 2)
+                    // Permet de supprimer et de pouvoir customiser la suppression.
+                    // Néanmoins la façon de supprimer avec onDelete c'est le style natif iOS.
+                    // swipeActions est plus utile si on a besoin d'ajouter d'autres actions aux swipes comme Archiver...
+                    //                        .swipeActions {
+                    //                            Button("Delete", role: .destructive) {
+                    //                                modelContext.delete(wish)
+                    //                            }
+                    //                        }
                 }
                 .onDelete(perform: deleteWish)
             }
             .navigationTitle("Wishlist")
             .toolbar {
-                Button {
-                    isAlertShowing.toggle()
-                } label: {
-                    Image(systemName: "plus")
-                }
-            }
-            .alert("Create a new wish", isPresented: $isAlertShowing) {
-                TextField("Enter a wish", text: $newWish)
-                Button {
-                    modelContext.insert(Wish(title: newWish))
-                    newWish = ""
-                } label: {
-                    Text("Save")
-                }
-                
-            }
-            .overlay {
-                if wishes.isEmpty {
-                    ContentUnavailableView(
-                        "My wishlist",
-                        systemImage: "heart.circle",
-                        description: Text("No wishes yet. Add you first wish.")
-                    )
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isAlertShowing.toggle()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
                 }
             }
 
         }
+        .alert("Create a new wish", isPresented: $isAlertShowing) {
+            TextField("Enter a wish", text: $newWish)
+            Button {
+                modelContext.insert(Wish(title: newWish))
+                newWish = ""
+            } label: {
+                Text("Save")
+            }
+
+        }
+        .overlay {
+            if wishes.isEmpty {
+                ContentUnavailableView(
+                    "My wishlist",
+                    systemImage: "heart.circle",
+                    description: Text("No wishes yet. Add you first wish.")
+                )
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if !wishes.isEmpty {
+                Text("^[\(wishes.count) wishes](inflect: true)")
+
+            }
+        }
+
     }
 
     func deleteWish(_ indexSet: IndexSet) {
@@ -64,8 +81,7 @@ struct ContentView: View {
     }
 }
 
-
-#Preview("List with sample data"){
+#Preview("List with sample data") {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Wish.self, configurations: config)
 
@@ -74,13 +90,12 @@ struct ContentView: View {
     container.mainContext.insert(Wish(title: "Practice SwiftUI"))
     container.mainContext.insert(Wish(title: "Travel to New Zealand"))
     container.mainContext.insert(Wish(title: "Take some vacation"))
-    
+
     return ContentView()
         .modelContainer(container)
 }
 
-
-#Preview("Empty List"){
+#Preview("Empty List") {
     ContentView()
         .modelContainer(for: Wish.self, inMemory: true)
 }
